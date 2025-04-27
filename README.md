@@ -90,9 +90,9 @@ Para añadir la funcionalidad de un módulo a nuestro servidor Apache, utilizamo
 
 Para deshabilitar la funcionalidad de un módulo lo desinstalamos con `a2dismod nombre_modulo`(a2dismod: Apache2 disable module).
 
-Al igual que con los **módulos** tenemos dos directorios con los archivos de configuración de los **Sotios** o **Servidores Web** que tenemos: 
+Al igual que con los **módulos** tenemos dos directorios con los archivos de configuración de los **Sitios** o **Servidores Web** que tenemos: 
 
-- En `**/etc/apache2/sites-available**` tenemos los archivos de configuración de los diferentes sitios o Servidores web disponibles, independientemente de que se hayan habilitado o no.
+- En `/etc/apache2/sites-available` tenemos los archivos de configuración de los diferentes sitios o Servidores web disponibles, independientemente de que se hayan habilitado o no.
 
 - En `/etc/apache2/sites-enabled**`tenemos los archivos de configuración de los sitios o servidores Web habilitados. 
 
@@ -104,9 +104,9 @@ Cuando habilitamos un directorio con `a2ensite`(Apache2 enable site), se crea un
 
 ## Sitios Virtuales
 
-Para crear un sitio virtual, como podemos intuir, creamos un archivo o modificamos alguno de los archivos existentes en  `**/etc/apache2/sites-availacble**`.
+Para crear un sitio virtual, como podemos intuir, creamos un archivo o modificamos alguno de los archivos existentes en  `**/etc/apache2/sites-available**`.
 
-Vamos a modificar el  archivo`**/etc/apache2/sites-availacble/000-default.conf**`. Lo dejamos con este contenido:
+Vamos a modificar el  archivo`**/etc/apache2/sites-available/000-default.conf**`. Lo dejamos con este contenido:
 ~~~
 <VirtualHost *:80>
 
@@ -135,7 +135,7 @@ Donde podemos ver que encontramos las diferentes variable:
 Una vez creado el archivo de configuración del sitio, lo habilitamos con:
 
 ~~~
-a2ensite /etc/apache2/sites-availacble/000-default.conf
+a2ensite /etc/apache2/sites-available/000-default.conf
 ~~~
 
 **Permisos y propietarios de Directorios de sitios virtuales**
