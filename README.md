@@ -92,7 +92,7 @@ Para deshabilitar la funcionalidad de un módulo lo desinstalamos con `a2dismod 
 
 Al igual que con los **módulos** tenemos dos directorios con los archivos de configuración de los **Sotios** o **Servidores Web** que tenemos: 
 
-- En `**/etc/apache2/sites-availacble**` tenemos los archivos de configuración de los diferentes sitios o Servidores web disponibles, independientemente de que se hayan habilitado o no.
+- En `**/etc/apache2/sites-available**` tenemos los archivos de configuración de los diferentes sitios o Servidores web disponibles, independientemente de que se hayan habilitado o no.
 
 - En `/etc/apache2/sites-enabled**`tenemos los archivos de configuración de los sitios o servidores Web habilitados. 
 
