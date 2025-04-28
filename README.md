@@ -227,6 +227,175 @@ Finalmente creamos el archivo de configuración del sitio:
 
 </VirtualHost>
 
+~~~
+
+Accedemos desde `http://www.hacker.edu`
+
+![](images/hard6.png)
+
+
+
+
+## Cómo habilitar HTTPS con SSL/TLS en Servidor Apache
+---
+
+Para proteger nuestro servidor es crucial habilitar HTTPS en el servidor local. Veamos cómo podemos habilitarlo en Apache con dos métodos diferentes.
+
+### Método 1: Habilitar HTTPS en Apache con OpenSSL**
+
+1. Generamos un certificado SSL autofirmado
+
+Para entornos de prueba o desarrollo, se puede utilizar un **certificado autofirmado**, es decir, un certificado que no ha sido emitido por una entidad de certificación.
+
+**Paso 1: Crear la clave privada y el certificado**
+---
+
+Como estamos trabajando bajo docker, accedemos al servidor:
+
+~~~
+docker exec -it lamp-php83 /bin/bash
+~~~
+
+Comprobamos que están creados los directorios donde se guardan los certificados y creamos el certificado autofirmado:
+
+~~~
+mkdir /etc/apache2/ssl
+cd /etc/apache2/ssl
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout localhost.key -out localhost.crt
+~~~
+
+**Explicación de los parámetros del comando:**
+
+- `req`: inicia la generación de una solicitud de certificado.
+- `-x509`: crea un certificado autofirmado en lugar de una CSR.
+- `-nodes`: omite el cifrado de la clave privada, evitando el uso de contraseña.
+- `-newkey rsa:2048`: genera una nueva clave RSA de 2048 bits.
+- `-keyout server.key`: nombre del archivo que contendrá la clave privada.
+- `-out server.crt`: nombre del archivo de salida para el certificado.
+- `-days 365`: el certificado será válido por 365 días.
+
+Durante la ejecución del comando, se te solicitará que completes datos como país, nombre de organización, y nombre común (dominio).
+
+![](images/hard7.png)
+
+Vemos como se han creado el certificado y la clave pública
+
+![](images/hard8.png)
+
+**Paso 2.Configurar Apache para usar HTTPS**
+
+Una vez que tengas el certificado y la clave privada, debes configurar Apache para utilizarlos.
+
+
+Editar el archivo de configuración de Apache `default-ssl.conf`:
+
+~~
+sudo nano /etc/apache2/sites-available/default-ssl.conf
+~~
+
+Lo modificamos y dejamos así:
+
+~~~
+<VirtualHost *:80>
+
+    ServerName www.pps.edu
+
+    ServerAdmin webmaster@localhost
+    DocumentRoot /var/www/html
+
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName www.pps.edu
+
+   //activar uso del motor de protocolo SSL 
+    SSLEngine on
+    SSLCertificateFile /etc/apache2/ssl/localhost.crt
+    SSLCertificateKeyFile /etc/apache2/ssl/localhost.key
+
+    DocumentRoot /var/www/html
+</VirtualHost>
+~~~
+
+Date cuenta que hemos creado un **servidor virtual** con nombre **www.pps.edu**. A partir de ahora tendremos que introducir en la barra de dirección del navegador `https://www.pps.edu` en vez de `https://localhost`.
+
+**Paso3: Habilitar SSL y el sitio:**
+
+En el servidor Apache, activamos **SSL** mediante la habilitación de la configuración `default-ssl.conf`que hemos creado:
+
+~~~
+a2enmod ssl
+a2ensite default-ssl.conf
+service apache2 reload
+~~~
+
+**Paso 4: poner dirección en /etc/hosts o habilitar puerto 443**
+
+Añadimos nuestro dominio en el archivo /etc/hosts de nuestra máquina anfitriona para que resulva bien los dns 
+
+![](images/hard.png)
+
+
+~~~
+
+Ahora el servidor soportaría **HTTPS**. Accedemos al servidor en la siguiente dirección: `https://www.pps.edu
+`
+
+### 🔒 Forzar HTTPS en Apache2 (default.conf y .htaccess)
+
+Podemos hacer que todas las solicitudes HTTP sean forzadas a HTTPS.
+
+Para que todas las conexiones se realicen por HTTPS po hacerlo de varias formas:
+
+Tienes dos opciones:
+        1. Configuración en default.conf (archivo de configuración de Apache)
+
+Edita tu archivo de configuración del sitio (por ejemplo /etc/apache2/sites-available/000-default.conf).
+
+
+a) Usar Redirect directo
+~~~
+<VirtualHost *:80>
+    ServerName midominio.com
+    ServerAlias www.midominio.com
+
+    Redirect permanent / https://midominio.com/
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName midominio.com
+    DocumentRoot /var/www/html
+
+    SSLEngine on
+    SSLCertificateFile /ruta/al/certificado.crt
+    SSLCertificateKeyFile /ruta/a/la/clave.key
+    SSLCertificateChainFile /ruta/a/la/cadena.crt
+
+    # Configuración adicional para HTTPS
+</VirtualHost>
+
+
+![](images/hard.png)
+![](images/hard.png)
+
+Aqui tenemos la configuración para **https**:
+
+~~~
+<VirtualHost *:80>
+
+    ServerName www.hacker.edu
+
+    ServerAdmin webmaster@localhost
+    DocumentRoot /var/www/hacker
+
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+</VirtualHost>
+
 <VirtualHost *:443>
     ServerName www.hacker.edu
 
@@ -237,14 +406,6 @@ Finalmente creamos el archivo de configuración del sitio:
     DocumentRoot /var/www/hacker
 </VirtualHost>
 ~~~
-
-Accedemos desde `http://www.hacker.edu`
-
-![](images/hard6.png)
-
-![](images/hard.png)
-![](images/hard.png)
-
 
 ## **Código seguro**
 ---
