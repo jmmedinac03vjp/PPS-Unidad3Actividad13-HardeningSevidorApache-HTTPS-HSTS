@@ -35,7 +35,7 @@ Vamos realizando operaciones:
 docker-compose up -d
 ~~~
 
-## Instalación de Apache
+## 1. Instalación de Apache
 ---
 
 Cómo estamos utilizando un escenario docker-compose, para acceder a nuestra máquina tendremos que ejecutar:
@@ -56,7 +56,7 @@ apt install apache2
 Si no estás utilizando el entorno de pruebas sino otra máquina no estás con usuario `root`es posible que tengas que poner delante de los comandos `sudo`.
 
  
-## Estructura de directorios de configuración Apache
+## 2. Estructura de directorios de configuración Apache
 
 El directorio donde nos encontraremos los archivos de configuración de Apache es `/etc/apache2`. Allí encontraremos los siguientes directorios de configuración que incluyen archivos de configuración (con extensión .conf). 
 
@@ -103,7 +103,7 @@ Cuando habilitamos un directorio con `a2ensite`(Apache2 enable site), se crea un
 ![](images/hard2.png)
 
 
-## Sitios Virtuales
+## 3. Sitios Virtuales
 
 Para crear un sitio virtual, como podemos intuir, creamos un archivo o modificamos alguno de los archivos existentes en  `**/etc/apache2/sites-available**`.
 
@@ -153,7 +153,7 @@ chmod -R 755 /var/www/html/*
 ~~~
 
 
-## Resolución local de nombres: dns o fichero **/etc/hosts**
+## 4. Resolución local de nombres: dns o fichero **/etc/hosts**
 
 Nuestro navegador resuleve la dirección www.google.com o cualquier otra asociándole la ip donde se encuentra en el servidor, eso es debido a la resolución de servidores dns.
 
@@ -198,7 +198,7 @@ http://www.pps.edu/
 ![](images/hard5.png)
 
 
-## Creación de un servidor virtual **Hackker**
+## 5. Creación de un servidor virtual **Hackker**
 
 Vamos a crear un servidor virtual nuevo para alojar los archivos maliciosos. El directorio estará en `/var/www/hacker` y el nombre del servidor será `www.hacker.edu`
 
@@ -237,7 +237,7 @@ Accedemos desde `http://www.hacker.edu`
 ![](images/hard6.png)
 
 
-## Cómo habilitar HTTPS con SSL/TLS en Servidor Apache
+## 6. Cómo habilitar HTTPS con SSL/TLS en Servidor Apache
 ---
 
 Para proteger nuestro servidor es crucial habilitar HTTPS en el servidor local. Veamos cómo podemos habilitarlo en Apache con dos métodos diferentes.
@@ -456,9 +456,9 @@ SSLCertificateFile /etc/letsencrypt/live/tu-dominio/fullchain.pem
 SSLCertificateKeyFile /etc/letsencrypt/live/tu-dominio/privkey.pem
 ~~~
 
-### 🔒 Forzar HTTPS en Apache2 (default.conf y .htaccess)
+## 7. 🔒  Forzar HTTPS en Apache2 (default.conf y .htaccess)
 
-#### 1. Configuración en `default.conf` (archivo de configuración de Apache)
+### 1. Configuración en `default.conf` (archivo de configuración de Apache)
 
 Edita tu archivo de configuración del sitio (por ejemplo `/etc/apache2/sites-available/000-default.conf`).
 
@@ -468,14 +468,14 @@ Tienes dos opciones:
 
 ~~~
 <VirtualHost *:80>
-    ServerName midominio.com
-    ServerAlias www.midominio.com
+    ServerName pps.edu
+    ServerAlias www.pps.edu
 
-    Redirect permanent / https://midominio.com/
+    Redirect permanent / https://pps.edu/
 </VirtualHost>
 
 <VirtualHost *:443>
-    ServerName midominio.com
+    ServerName pps.edu
     DocumentRoot /var/www/html
 
     SSLEngine on
@@ -493,8 +493,8 @@ Tienes dos opciones:
 
 ```apache
 <VirtualHost *:80>
-    ServerName midominio.com
-    ServerAlias www.midominio.com
+    ServerName pps.edu
+    ServerAlias www.pps.edu
 
     RewriteEngine On
     RewriteCond %{HTTPS} off
@@ -504,7 +504,7 @@ Tienes dos opciones:
 
 ---
 
-#### 2. Configuración en `.htaccess`
+### 2. Configuración en `.htaccess`
 
 Si prefieres hacerlo desde un `.htaccess` en la raíz del proyecto:
 
@@ -533,7 +533,7 @@ sudo systemctl reload apache2
 
 ---
 
-## 🛡️ Nota de seguridad extra: HSTS (opcional pero recomendado)
+## 8. 🛡️  Nota de seguridad extra: HSTS (opcional pero recomendado)
 
 Para reforzar aún más tu HTTPS, puedes agregar esta cabecera de seguridad (por ejemplo en tu VirtualHost HTTPS o en `.htaccess`):
 
@@ -546,11 +546,87 @@ Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains
 **Importante**: Asegúrate de que todo tu sitio funcione bien en HTTPS antes de aplicar HSTS.
 
 
+## IMPORTANTE 🛡️  sOLUCIÓN  de problemas que puedan surgir.
+
+Como estamos utilizando un servidor con docker-compose es importante:
+
+**Para Parar el Escenario LAMP**
+
+- Utilizamos siempre:
+
+```bash
+docker-compose stop
+```
+
+Si utilizáramos `docker-compose` o `docker-compose down -v`, van a eliminarse la red y las máquinas, y en caso de que pongamos `-v`también los volúmenes docker.
+
+No obstante, recordemos que dentro de la carpeta del docker compose, tenemos `volúmenes bind-mount de docker` donde se va guardando: 
+
+- `config` : configuración de Apache y mysql.
+
+- `logs`: logs de apache.
+
+- `www`: `/var/www/html` de apache.
+
+- `data`: base de datos mysql.
+
+Por lo tanto, después de eliminar el escenario, incluso si utilizamos `-v` esos archivos seguirán estando en nuestro sistema, por lo tanto ¡¡¡OJO¡¡¡ por que nos pueden dar problemas al crear de nuevo el escenario.
 
 
+**Para Iniciar el Escenario LAMP**
+
+- Utilizamos siempre:
+
+```bash
+docker-compose stop
+```
+
+** Para eliminar completamente el escenario y comenzar de nuevo eliminando las configuraciones anteriores**
+
+- Utilizamos :
+
+```bash
+docker-compose down -v
+```
 
 
-![](images/hard.png)
+Recordemos que dentro podemos tener configuraciones en los `volúmenes bind mount` por lo tanto hay que ver que puede ser necesario eliminar también archivos y configuraciones anteriores en las siguientes carpetas:
+
+- `config` : configuración de Apache y mysql.
+
+	- `initdb`: configuración de mysql
+
+	- `php`: configuración PHP de Apache. Si hemos modificado algo, sería conveniente eliminar el php.ini para que se genere de nuevo por defecto.
+
+	- `ssl`: carpeta con certificados `SSL` de Apache. Es posible que tengamos que eliminarlos.
+
+	- `vhosts` **IMPORTANTE**: aquí se guarda la configuración de los sitios virtuales de apache `/etc/apache2/sites-available`. Por lo tanto cualquier archivo de configuración que esté presente aquí el servidor va a intentar arrancarlo y si no tiene algún módulo activado es posible que nos de error.
+ 
+- `logs`: logs de apache. En principio esta carpeta no es problemática.
+
+- `www`: `/var/www/html` de apache. Nuestros archivos del servidor. No debe de dar problema tampoco.
+
+- `data`: base de datos mysql. Si queremos eliminar BBDD deberíamos eliminar su contenido.
+
+**EJEMPLO DE PROBLEMA:** Después de eliminar el escenario multicontenedor no arranca el servidor PHP.
+
+Si hemos eliminado el escenario multicontenedor y después de levantarlo no podemos acceder al servidor apache con: `docker exec -it lamp-php83 /bin/bash`, es posible por que haya un problema en la configuración. Por ejemplo en este caso:
+
+- Hemos estado practicando y hemos activado SSL, por lo que tenemos archivo default-ssl.conf para levantar apache con SSL.
+
+- Lógicamente hemos activado el módulo ssl `a2enmod ssl`
+
+- Al eliminar el contenedor e intentar levantarlo de nuevo, va a intentar activar el sitio `default-ssl.conf` pero como no tiene activo el módulo  `ssl` apache da un error y no lo levanta.
+
+Podemos ver el estado de los contenedores con `docker-compose ps`.
+
+ **Que hacer en este caso** 
+
+Podemos mover esos archivos de configuración a otro sitio, levantar el escenario o apache de nuevo y volver a restaurar el archivo a su sitio después de levantar el módulo SSL.
+
+![](images/hard14.png)
+
+
 ![](images/hard.png)
 ![](images/hard.png)
 
@@ -607,7 +683,7 @@ Aquí está el código securizado:
 
 > __Realiza las operaciones indicadas__
 
-> __Crea un repositorio  con nombre PPS-Unidad3Actividad6-Tu-Nombre donde documentes la realización de ellos.__
+> __Crea un repositorio  con nombre PPS-Unidad3Actividad13-Tu-Nombre donde documentes la realización de ellos.__
 
 > No te olvides de documentarlo convenientemente con explicaciones, capturas de pantalla, etc.
 
