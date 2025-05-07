@@ -608,6 +608,16 @@ Recordemos que dentro podemos tener configuraciones en los `volúmenes bind moun
 
 - `data`: base de datos mysql. Si queremos eliminar BBDD deberíamos eliminar su contenido.
 
+Por lo tanto si hemos eliminado completamente el escenario, cuando lo arranquemos de nuevo, hay que comprobar que todos los servicios están levantados y especialmente que sitios están activados por ejemplo con `a2ensite` y en su caso desactivar los sitios no deseados.
+
+**¡¡¡OJO¡¡¡** que el fichero que sí se elimina es `/etc/hosts` por lo que tenemos que volver a poner allí la línea
+
+archivo `/etc/hosts`
+```/etc/hosts
+127.0.0.1       pps.edu www.pps.edu
+
+```
+
 **EJEMPLO DE PROBLEMA:** Después de eliminar el escenario multicontenedor no arranca el servidor PHP.
 
 Si hemos eliminado el escenario multicontenedor y después de levantarlo no podemos acceder al servidor apache con: `docker exec -it lamp-php83 /bin/bash`, es posible por que haya un problema en la configuración. Por ejemplo en este caso:
@@ -622,9 +632,10 @@ Podemos ver el estado de los contenedores con `docker-compose ps`.
 
  **Que hacer en este caso** 
 
-Podemos mover esos archivos de configuración a otro sitio, levantar el escenario o apache de nuevo y volver a restaurar el archivo a su sitio después de levantar el módulo SSL.
+Podemos mover esos archivos de configuración a otro sitio, levantar el escenario o apache de nuevo y volver a restaurar el archivo a su sitio después de levantar el módulo SSL y si queremos desactivamos el sitio por defecto `a2dissite 000-default.conf`.
 
 ![](images/hard14.png)
+
 
 
 ![](images/hard.png)
