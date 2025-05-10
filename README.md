@@ -1,4 +1,5 @@
 # HTTPS, Hsts, Hardening de servidor web  .
+
 Tenemos como objetivo:
 
 >
@@ -12,11 +13,9 @@ Tenemos como objetivo:
 >
 > - Conocer HTST
 >
-> - Conocer los Firewall de aplicaciones (WAF)
->
 > - Utilizar configuracion segura en servidores y aplicaciones web.
 >
-> - Implementar registro y monitorización de eventos de seguridad
+> - Conocer los Firewall de aplicaciones (WAF)
 
 
 # ACTIVIDADES A REALIZAR
@@ -628,6 +627,7 @@ ServerTokens Prod
 >
 > **EMail**	 Similar a On, pero agrega la dirección de ServerAdmin en los mensajes de error. (No recomendado por seguridad)
 
+
 ### Ocultar la versión de PHP (php.ini)
 
 para deshabilitar la exposición de `PHP` en `Debian \ Ubuntu`, primero localizamos el archivo de configuración de `PHP`desde el terminal de comandos:
@@ -660,37 +660,81 @@ nano /usr/local/etc/php/php.ini
 sudo systemctl restart apache2
 ```
 
-Además, si se usa PHP-FPM, también reiniciarlo. FPM (FastCGI Process Manager) es una implementación alternativa al
-PHP FastCGI. FPM es un servidor de aplicaciones PHP que se encarga de interpretar código PHP. Aunque normalmente
-se utiliza junto a un servidor web (Apache2 o ngnix):
-sudo systemctl restart php8.2-fpm
-La respuesta del servidor ya no debería mostrar la versión de Apache ni de PHP.
-Mitigación y Mejores Prácticas
-* Deshabilitar listados de directorios si no hay un index (.htaccess o apache2.conf o 000-default.conf)
+Además, si se usa `PHP-FPM`, también reiniciarlo. FPM (FastCGI Process Manager) es una implementación alternativa al PHP FastCGI. FPM es un servidor de aplicaciones PHP que se encarga de interpretar código PHP. Aunque normalmente se utiliza junto a un servidor web (Apache2 o ngnix):
+
+Par saber si tienes instalado `PHP-FPM`:
+
+```bash
+php-fpm status
+```
+Si está instalado te mostrará su estado, si no lo está, mostrará el mensaje de "Comando no encontrado".
+
+![](images/hard20.png)
+
+```bash
+service php8.2-fpm restart
+```
+
+> Con estas modificaciones, la respuesta del servidor a `curl -I http://pps.edu` ya no debería mostrar la versión de Apache ni de PHP.
+
+
+### Otras mitigaciones y Mejores Prácticas
+
+** Deshabilitar listados de directorios**
+
+Para deshabilitar que se puedan listar los directorios si no hay un index utilizamos:
+
+```apache
 Options -Indexes
-* Revisar permisos en archivos sensibles
+```
+
+Dependiendo de donde nos interese podemos aplicar esta configuración en:
+
+- Par todo el servidor: `/etc/apache2/apache2.conf`
+- Para uno o varios sitios virtuales: `/etc/apache2/sites-available/XXXXX.conf`
+- Para uno o varios directorio en configuración "htaccess": `.htaccess`
+
+**Revisar permisos en archivos sensibles**
+
+Los permisos del archivo de configuración de Apache deben de ser los siguientes:
+
+```bash
 chmod 640 /etc/apache2/apache2.conf
-* Desactivar métodos HTTP inseguros como PUT, DELETE, TRACE, OPTIONS
+```
+
+**Desactivar métodos HTTP inseguros**
+
+Para Desactivar métodos HTTP inseguros como `PUT`, `DELETE`, `TRACE`u `OPTIONS` utilizamos la siguiente configuración en Apache:
+
+```apache
 <Directory />
-<LimitExcept GET POST>
-Deny from all
-</LimitExcept>
+	<LimitExcept GET POST>
+		Deny from all
+	</LimitExcept>
 </Directory>
-3
-* Configurar cabeceras de seguridad en Apache
+```
+
+**Configurar cabeceras de seguridad en Apache**
+
+```apache
 Header always unset X-Powered-By
 Header always set X-Frame-Options "DENY"
 Header always set X-XSS-Protection "1; mode=block"
 Header always set X-Content-Type-Options "nosniff"
-
-
-
-
-Header always unset X-Powered-By → Oculta información sobre PHP.
-Header always set X-Frame-Options "DENY" → Previene ataques de Clickjacking.
-Header always set X-XSS-Protection "1; mode=block" → Protege contra ataques XSS.
-Header always set X-Content-Type-Options "nosniff" → Evita ataques MIME Sniffing.
-Configuración FINAL del archivo 000-default.conf
+```
+Las inclusión de las diferentes cabeceras tienen las siguientes consecuencias: 
+- `Header always unset X-Powered-By` → Oculta información sobre PHP.
+- `Header always set X-Frame-Options "DENY"` → Previene ataques de Clickjacking.
+- `Header always set X-XSS-Protection "1; mode=block"` → Protege contra ataques XSS.
+- `Header always set X-Content-Type-Options "nosniff"` → Evita ataques MIME Sniffing.
+
+
+### Configuración FINAL del archivo 000-default.conf
+
+Aqui puedes encontrar la configuración segura:
+
+archivo `/etc/apache2/etc/sites-available/default-ssl.conf`
+```apache
 <VirtualHost *:80>
 ServerAdmin webmaster@localhost
 DocumentRoot /var/www/html
@@ -715,9 +759,10 @@ Header always set X-Content-Type-Options "nosniff"
 ErrorLog ${APACHE_LOG_DIR}/error.log
 CustomLog ${APACHE_LOG_DIR}/access.log combined
 </VirtualHost>
-## IMPORTANTE 
+```
 
-🛡️  sOLUCIÓN  de problemas que puedan surgir.
+---
+## ⚠️  IMPORTANTE: SOLUCIÓN  de problemas que puedan surgir.
 
 Como estamos utilizando un servidor con docker-compose es importante:
 
