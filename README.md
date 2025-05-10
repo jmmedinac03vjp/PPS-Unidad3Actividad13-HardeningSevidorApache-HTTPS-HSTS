@@ -13,6 +13,10 @@ Tenemos como objetivo:
 > - Conocer HTST
 >
 > - Conocer los Firewall de aplicaciones (WAF)
+>
+> - Utilizar configuracion segura en servidores y aplicaciones web.
+>
+> - Implementar registro y monitorización de eventos de seguridad
 
 
 # ACTIVIDADES A REALIZAR
@@ -533,7 +537,26 @@ sudo systemctl reload apache2
 
 ---
 
-## 8. 🛡️  Nota de seguridad extra: HSTS (opcional pero recomendado)
+## 8. 🛡️  Implementación y Evaluación de Content Security Policy (CSP)
+
+Puedes ver este contenido con más profundidad en el siguiente repositorio: <https://github.com/jmmedinac03vjp/PPS-Unidad3Actividad20-CSP>
+
+Para reforzar más HTTPS podemos implementar la política de seguridad de contenidos:
+
+CSP (Content Security Policy) es un mecanismo de seguridad que limita los orígenes de scripts, estilos e imágenes en
+una aplicación web para evitar ataques como XSS.
+
+```apache
+<IfModule mod_headers.c>
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self'  object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+</IfModule>
+```
+Por ejemplo, de esta forma solo permitimos la carga de contenidos de nuestro sitio, ningúno de servidores externos.
+
+
+## 9. 🛡️  Nota de seguridad extra: HSTS (opcional pero recomendado)
+
+Puedes ver este contenido con más profundidad en el siguiente repositorio: <https://github.com/jmmedinac03vjp/PPS-Unidad3Actividad21-HSTS>
 
 Para reforzar aún más tu HTTPS, puedes agregar esta cabecera de seguridad (por ejemplo en tu VirtualHost HTTPS o en `.htaccess`):
 
@@ -544,9 +567,157 @@ Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains
 > Esto obliga a los navegadores a recordar usar siempre HTTPS, protegiendo de ataques de tipo *downgrade*.
 
 **Importante**: Asegúrate de que todo tu sitio funcione bien en HTTPS antes de aplicar HSTS.
+---
+
+## 10. Identificación y Corrección de Security Misconfiguration
+
+En este apartado vermeos la configuración segura en servidores y aplicaciones web
+
+**Objetivo**: Detectar configuraciones inseguras en un servidor web y corregirlas
+
+### ¿Qué es Security Misconfiguration?
+
+Security Misconfiguration ocurre cuando un servidor, base de datos o aplicación tiene configuraciones predeterminadas o inseguras, permitiendo ataques como exposición de archivos sensibles o acceso no autorizado.
+
+### Configuraciones inseguras
+
+Para comprobar si hay exposición de información sensible en nuestro servidor ejecutamos:
+
+```bash
+curl -I http://pps.edu
+```
+
+![](images/hard15.png)
+
+Si la respuesta contiene:`Server: Apache/2.4.41 (Ubuntu)` y/o `X-Powered-By: PHP/7.4.3` el sistema nos está ofreciendo información sobre las versiones de Apache y PHP.
 
 
-## IMPORTANTE 🛡️  sOLUCIÓN  de problemas que puedan surgir.
+Los atacantes pueden aprovechar vulnerabilidades conocidas en versiones específicas de software.
+
+### Corregir la configuración del servidor Apache
+
+Las directivas pueden estar en distintos archivos según la distribución y la configuración de Apache. Intentar encontrarlas desde el terminal en nuestra máquina Apache con:
+
+```bash
+grep -Ri "ServerSignature\|ServerTokens" /etc/apache2/
+```
+![](images/hard16.png)
+
+En los sistemas que usan `Debian/Ubuntu` como base, las directivas `ServerSignature` y `ServerTokens` se configuran en el archivo `/etc/apache2/conf-available/security.conf`.
+
+Editar la configuración del módulo de seguridad de apache para ocultar versión del servidor en Apache:
+
+archivo ` /etc/apache2/conf-available/security.conf`
+``` apache
+ServerSignature Off
+ServerTokens Prod
+```
+![](images/hard17.png)
+
+>
+> La directiva `ServerTokens` en `Apache` controla cuánta información sobre el servidor se incluye en las cabeceras de respuesta HTTP.
+>
+> ![](images/hard18.png)
+
+>
+>La directiva ServerSignature controla si Apache muestra información sobre el servidor en las páginas de error, listados de directorios y otras respuestas generadas automáticamente.
+> Opción						 Efecto
+> **On**	 Muestra información completa sobre Apache en páginas de error y listados de directorios. (Inseguro)
+>
+> **Off**	 No muestra ninguna firma del servidor en las páginas de error y directorios. (Recomendado)
+>
+> **EMail**	 Similar a On, pero agrega la dirección de ServerAdmin en los mensajes de error. (No recomendado por seguridad)
+
+### Ocultar la versión de PHP (php.ini)
+
+para deshabilitar la exposición de `PHP` en `Debian \ Ubuntu`, primero localizamos el archivo de configuración de `PHP`desde el terminal de comandos:
+```bash
+php --ini | grep "Loaded Configuration File"
+```
+
+La salida mostrará la ruta, por ejemplo: `Loaded Configuration File: /etc/php/8.2/apache2/php.ini`
+
+![](images/hard19.png)
+
+Si se tienen varias versiones de PHP, verificar cuál está en uso con:
+
+```bash 
+php -v
+```
+
+Editar el archivo de configuración de `PHP` correspondiente. En nuestro caso:
+
+archivo `/usr/local/etc/php/php.ini`
+
+```bash
+nano /usr/local/etc/php/php.ini
+```
+[Aquí tienes el archivo de configuración de php](files/php.ini). Recuerda hacer una copia del anterior
+
+- Hemos cambiado `expose_php = On` a `expose_php = Off` y reiniciado los servicios:
+
+```bash 
+sudo systemctl restart apache2
+```
+
+Además, si se usa PHP-FPM, también reiniciarlo. FPM (FastCGI Process Manager) es una implementación alternativa al
+PHP FastCGI. FPM es un servidor de aplicaciones PHP que se encarga de interpretar código PHP. Aunque normalmente
+se utiliza junto a un servidor web (Apache2 o ngnix):
+sudo systemctl restart php8.2-fpm
+La respuesta del servidor ya no debería mostrar la versión de Apache ni de PHP.
+Mitigación y Mejores Prácticas
+* Deshabilitar listados de directorios si no hay un index (.htaccess o apache2.conf o 000-default.conf)
+Options -Indexes
+* Revisar permisos en archivos sensibles
+chmod 640 /etc/apache2/apache2.conf
+* Desactivar métodos HTTP inseguros como PUT, DELETE, TRACE, OPTIONS
+<Directory />
+<LimitExcept GET POST>
+Deny from all
+</LimitExcept>
+</Directory>
+3
+* Configurar cabeceras de seguridad en Apache
+Header always unset X-Powered-By
+Header always set X-Frame-Options "DENY"
+Header always set X-XSS-Protection "1; mode=block"
+Header always set X-Content-Type-Options "nosniff"
+
+
+
+
+Header always unset X-Powered-By → Oculta información sobre PHP.
+Header always set X-Frame-Options "DENY" → Previene ataques de Clickjacking.
+Header always set X-XSS-Protection "1; mode=block" → Protege contra ataques XSS.
+Header always set X-Content-Type-Options "nosniff" → Evita ataques MIME Sniffing.
+Configuración FINAL del archivo 000-default.conf
+<VirtualHost *:80>
+ServerAdmin webmaster@localhost
+DocumentRoot /var/www/html
+# Deshabilitar listado de directorios
+<Directory /var/www/html>
+Options -Indexes
+</Directory>
+# Desactivar métodos HTTP inseguros (Solo permite GET y POST)
+<Directory />
+<LimitExcept GET POST>
+Deny from all
+</LimitExcept>
+</Directory>
+# Configurar cabeceras de seguridad
+<IfModule mod_headers.c>
+Header always unset X-Powered-By
+Header always set X-Frame-Options "DENY"
+Header always set X-XSS-Protection "1; mode=block"
+Header always set X-Content-Type-Options "nosniff"
+</IfModule>
+# Otras configuraciones de logs y errores
+ErrorLog ${APACHE_LOG_DIR}/error.log
+CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+## IMPORTANTE 
+
+🛡️  sOLUCIÓN  de problemas que puedan surgir.
 
 Como estamos utilizando un servidor con docker-compose es importante:
 
@@ -636,59 +807,6 @@ Podemos mover esos archivos de configuración a otro sitio, levantar el escenari
 
 ![](images/hard14.png)
 
-
-
-![](images/hard.png)
-![](images/hard.png)
-
-Aqui tenemos la configuración para **https**:
-
-~~~
-<VirtualHost *:80>
-
-    ServerName www.hacker.edu
-
-    ServerAdmin webmaster@localhost
-    DocumentRoot /var/www/hacker
-
-    ErrorLog ${APACHE_LOG_DIR}/error.log
-    CustomLog ${APACHE_LOG_DIR}/access.log combined
-
-</VirtualHost>
-
-<VirtualHost *:443>
-    ServerName www.hacker.edu
-
-    SSLEngine on
-    SSLCertificateFile /etc/apache2/ssl/localhost.crt
-    SSLCertificateKeyFile /etc/apache2/ssl/localhost.key
-
-    DocumentRoot /var/www/hacker
-</VirtualHost>
-~~~
-
-## **Código seguro**
----
-
-Aquí está el código securizado:
-
-🔒 Medidas de seguridad implementadas
-
-- :
-
-        - 
-
-        - 
-
-
-
-🚀 Resultado
-
-✔ 
-
-✔ 
-
-✔ 
 
 ## ENTREGA
 
