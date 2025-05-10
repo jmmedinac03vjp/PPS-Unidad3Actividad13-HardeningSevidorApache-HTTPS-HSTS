@@ -38,6 +38,10 @@ Vamos realizando operaciones:
 docker-compose up -d
 ~~~
 
+Para asegurarnos que no tenemos ninguna seguridad implementada descarga tus archivos de configuración:
+
+- [/etc/apache2/apache2.conf](files/apache2.conf.minimo)
+
 ## 1. Instalación de Apache
 ---
 
@@ -463,7 +467,7 @@ SSLCertificateKeyFile /etc/letsencrypt/live/tu-dominio/privkey.pem
 
 ### 1. Configuración en `default.conf` (archivo de configuración de Apache)
 
-Edita tu archivo de configuración del sitio (por ejemplo `/etc/apache2/sites-available/000-default.conf`).
+Edita tu archivo de configuración del sitio (por ejemplo `/etc/apache2/sites-available/default-ssl.conf`).
 
 Tienes dos opciones:
 
@@ -593,6 +597,7 @@ Si la respuesta contiene:`Server: Apache/2.4.41 (Ubuntu)` y/o `X-Powered-By: PHP
 
 Los atacantes pueden aprovechar vulnerabilidades conocidas en versiones específicas de software.
 
+
 ### Corregir la configuración del servidor Apache
 
 Las directivas pueden estar en distintos archivos según la distribución y la configuración de Apache. Intentar encontrarlas desde el terminal en nuestra máquina Apache con:
@@ -600,6 +605,7 @@ Las directivas pueden estar en distintos archivos según la distribución y la c
 ```bash
 grep -Ri "ServerSignature\|ServerTokens" /etc/apache2/
 ```
+
 ![](images/hard16.png)
 
 En los sistemas que usan `Debian/Ubuntu` como base, las directivas `ServerSignature` y `ServerTokens` se configuran en el archivo `/etc/apache2/conf-available/security.conf`.
@@ -682,17 +688,56 @@ service php8.2-fpm restart
 
 ** Deshabilitar listados de directorios**
 
-Para deshabilitar que se puedan listar los directorios si no hay un index utilizamos:
+Nos encontramos ante un fallo de seguridad cuando al introducir la ruta a una carpeta del servidor web que no contiene un archivo `index.html`, se nos muestran los archivos presentes en ella. Por ejemplo, crea una carpeta de ejemplo e introduce en ella dos archivos vacíos:
+
+``` bash
+mkdir /var/www/html/ejemplo
+touch /var/www/html/ejemlo/ejemplo1.txt
+touch /var/www/html/ejemlo/ejemplo2.txt
+```
+Comprueba que en la configuración de tu sitio no esté deshabilitados el `Options -Indexes`:
+ 
+![](images/hard22.png)
+
+Si 
+
+Para deshabilitar que se puedan listar los directorios si no hay un index utilizamos en los directorios deseados `Options Indexes`:
 
 ```apache
-Options -Indexes
+<Directory /var/www/html>
+        AllowOverride All
+        Require all granted
+    </Directory>
 ```
 
 Dependiendo de donde nos interese podemos aplicar esta configuración en:
 
 - Par todo el servidor: `/etc/apache2/apache2.conf`
+
+![](images/hard21.png)
+
 - Para uno o varios sitios virtuales: `/etc/apache2/sites-available/XXXXX.conf`
+
+![](images/hard22.png)
+
 - Para uno o varios directorio en configuración "htaccess": `.htaccess`
+
+> Las diferentes `options` que podemos aplicar son:
+>
+> - All: Todas las opciones excepto MultiViews.
+>
+> - FollowSymLinks: Se pueden seguir los enlaces simbólicos.
+>
+> - Indexes: Cuando accedemos al directorio y no se encuentra un fichero por defecto (indicado en la directiva DirectoryIndex del módulo mod_dir), por ejemplo el index.html, se muestra la lista de ficheros (esto lo realiza el módulo mod_autoindex).
+>
+> - MultiViews: Permite la negociación de contenido, mediante el módulo mod_negotiation.
+> 
+> - SymLinksIfOwnerMatch: Se pueden seguir enlaces simbólicos, sólo cuando el fichero destino es del mismo propietario que el enlace simbólico.
+>
+> - ExecCGI: Permite ejecutar script CGI usando el módulo mod_cgi.
+>
+> Podemos activar o desactivar una opción en referencia con la configuración de un directorio padre mediante el signo `+` o `-`.
+>
 
 **Revisar permisos en archivos sensibles**
 
