@@ -899,7 +899,8 @@ archivo `/etc/apache2/etc/sites-available/default-ssl.conf`
 
 ---
 
-## ⚠️  IMPORTANTE SOLUCION  de problemas que puedan surgir.
+## ⚠️  
+##IMPORTANTE SOLUCION  de problemas que puedan surgir.
 
 Como estamos utilizando un servidor con docker-compose es importante:
 
