@@ -101,7 +101,7 @@ Al igual que con los **módulos** tenemos dos directorios con los archivos de co
 
 - En `/etc/apache2/sites-available` tenemos los archivos de configuración de los diferentes sitios o Servidores web disponibles, independientemente de que se hayan habilitado o no.
 
-- En `/etc/apache2/sites-enabled**`tenemos los archivos de configuración de los sitios o servidores Web habilitados. 
+- En `/etc/apache2/sites-enabled`tenemos los archivos de configuración de los sitios o servidores Web habilitados. 
 
 Para habilitar un sitio utilizamos el comando `a2ensite Archivo.conf`. Siendo Archivo.conf la configuración del sitio guardada en el directorio `/etc/apache2/sites-available/`.
 
@@ -112,9 +112,9 @@ Cuando habilitamos un directorio con `a2ensite`(Apache2 enable site), se crea un
 
 ## 3. Sitios Virtuales
 
-Para crear un sitio virtual, como podemos intuir, creamos un archivo o modificamos alguno de los archivos existentes en  `**/etc/apache2/sites-available**`.
+Para crear un sitio virtual, como podemos intuir, creamos un archivo o modificamos alguno de los archivos existentes en  `/etc/apache2/sites-available`.
 
-Vamos a modificar el  archivo`**/etc/apache2/sites-available/000-default.conf**`. Lo dejamos con este contenido:
+Vamos a modificar el  archivo`/etc/apache2/sites-available/000-default.conf`. Lo dejamos con este contenido:
 ~~~
 <VirtualHost *:80>
 
@@ -298,7 +298,15 @@ Vemos como se han creado el certificado y la clave pública
 
 Una vez que tengas el certificado y la clave privada, debes configurar Apache para utilizarlos.
 
+Yo voy a cambiar el archivo de coniguración que uso. Por lo tanto:
 
+- Deshabilitar el sitio que estaba utilizando:
+
+```bash
+a2dissite 000-default.conf
+```
+
+.
 Editar el archivo de configuración de Apache `default-ssl.conf`:
 
 ~~~
