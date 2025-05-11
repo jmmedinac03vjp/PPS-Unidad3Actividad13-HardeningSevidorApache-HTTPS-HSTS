@@ -26,7 +26,13 @@ Tenemos como objetivo:
 >
 > Lee detenidamente el siguiente [documento para conocer cómo podemos securizar nuestro servidor web ](./files/3-Hardening-Servidor.pdf)
 >
-
+> En la [carpeta](files) puedes encontrar 3 documentos sobre:
+>
+> - Protocolo http
+>
+> - Configuración básica de Apache
+>
+> - Hardening de Servidor Apache   
 
 Vamos realizando operaciones:
 
