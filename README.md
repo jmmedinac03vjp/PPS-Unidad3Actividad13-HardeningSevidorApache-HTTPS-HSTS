@@ -30,6 +30,8 @@ Tenemos como objetivo:
 
 Vamos realizando operaciones:
 
+---
+
 ## Iniciar entorno de pruebas
 
 -Situáte en la carpeta de del entorno de pruebas de nuestro servidor LAMP e inicia el escenario docker-compose
@@ -50,6 +52,7 @@ Para asegurarnos que no tenemos ninguna seguridad implementada descarga tus arch
 En el [último punto de esta sección](#IMPORTANTE-Solucion-problemas-que-puedan-surgir.) , puedes encontrar la solución a problemas que te pueden surgir durante la realización del ejercicio, relacionado con los cambios en las configuraciones, por lo que puedes echarle un ojo antes de empezar.
 
 ---
+
 ## 1. Instalación de Apache
 
 Cómo estamos utilizando un escenario docker-compose, para acceder a nuestra máquina tendremos que ejecutar:
@@ -516,7 +519,6 @@ Tienes dos opciones:
 </VirtualHost>
 ~~~
 
----
 
 ** Opción b) Usar `RewriteEngine` para mayor flexibilidad**
 
@@ -603,9 +605,11 @@ En este apartado vermeos la configuración segura en servidores y aplicaciones w
 
 **Objetivo**: Detectar configuraciones inseguras en un servidor web y corregirlas
 
+
 ### ¿Qué es Security Misconfiguration?
 
 Security Misconfiguration ocurre cuando un servidor, base de datos o aplicación tiene configuraciones predeterminadas o inseguras, permitiendo ataques como exposición de archivos sensibles o acceso no autorizado.
+
 
 ### Configuraciones inseguras
 
@@ -725,8 +729,6 @@ touch /var/www/html/ejemplo/ejemplo1.txt
 touch /var/www/html/ejemplo/ejemplo2.txt
 ```
  
-
-
 
 Para deshabilitar que se puedan listar los directorios si no hay un index utilizamos en los directorios deseados `Options Indexes`:
 
@@ -909,14 +911,13 @@ archivo `/etc/apache2/etc/sites-available/default-ssl.conf`
 </VirtualHost>
 ```
 
----
 
-## 🔐 Configuración de `mod_security` con reglas OWASP CRS en Apache
+### 🔐 10. Configuración de `mod_security` con reglas OWASP CRS en Apache
 
 Par finalizar vamos a crear un WAF en nuestro servidor Apache.
 
 
-### 🔐 1. ¿Qué es un WAF?
+### 🔐  **¿Qué es un WAF?**
 
 Un WAF (Web Application Firewall) es un firewall especializado que protege aplicaciones web filtrando, monitoreando y bloqueando tráfico HTTP/S malicioso. Actúa como una barrera entre el cliente (usuario) y el servidor web.
 
@@ -1004,7 +1005,7 @@ Para asegurarnos que no tenemos ninguna seguridad implementada de las realizadas
 
 
 
-### ✅ 2. Instalar `mod_security`
+### ✅ Instalar `mod_security`
 
 Para instalar la libreria de Apache `ModSecurity` ejecuta en línea de comandos:
 
@@ -1016,7 +1017,7 @@ apt install libapache2-mod-security2
 Esto instala `mod_security` y lo habilita como módulo de Apache.
 
 
-### ✅ 3. Activar y verificar `mod_security`
+### ✅  Activar y verificar `mod_security`
 
 Copiamos el archivo de configuración recomendado
 
@@ -1053,7 +1054,7 @@ Nos debe de dar como resultado: ` security2_module (shared)`
 
 ---
 
-### ✅ 4. Descargar OWASP ModSecurity Core Rule Set (CRS)
+### ✅  Descargar OWASP ModSecurity Core Rule Set (CRS)
 
 Para incorporar las reglas CRS de OWASP a `mod_security` clonamos el repositorio y copiamos el archivo de configuración.
 ```bash
@@ -1066,7 +1067,7 @@ cp crs-setup.conf.example crs-setup.conf
 
 ---
 
-### ✅ 5. Incluir las reglas OWASP en la configuración
+### ✅  Incluir las reglas OWASP en la configuración
 
 Al instalar modsecurity-crs, Apache puede autoincluir CRS desde:
 
@@ -1114,7 +1115,7 @@ Si te da error de duplicación de reglas, puedes comentar los `includeOptional` 
 
 ---
 
-### ✅ 6. Activar bloqueo real (opcional, tras pruebas)
+### ✅  Activar bloqueo real (opcional, tras pruebas)
 
 Una vez que hayas probado que no rompe funcionalidades legítimas de tu sitio:
 
@@ -1130,7 +1131,7 @@ SecRuleEngine On
 
 Esto hará que el WAF **bloquee solicitudes peligrosas automáticamente**.
 
-### ✅ 7. Probar el WAF
+### ✅  Probar el WAF
 
 Prueba reglas usando cadenas típicas de ataques en la URL:
 
@@ -1147,7 +1148,7 @@ El acceso debería ser bloqueado con un **Forbidden** (si está en modo "On") o 
 
 ---
 
-### ✅ 8. Ver logs de ModSecurity
+### ✅  Ver logs de ModSecurity
 
 ModSecurity escribe sus logs `/var/log/apache2/modsec_autdit.log`.
 
@@ -1177,7 +1178,7 @@ Coloca esto en tu configuración personalizada, después de cargar el CRS.
 ---
 
 ## ⚠️  
-##IMPORTANTE SOLUCION  de problemas que puedan surgir.
+## 11.IMPORTANTE SOLUCION  de problemas que puedan surgir.
 
 Como estamos utilizando un servidor con docker-compose es importante:
 
