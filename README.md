@@ -44,7 +44,7 @@ Para asegurarnos que no tenemos ninguna seguridad implementada descarga tus arch
 
 - Archivo de configuración de `PHP`. Nosotros al estar utilizando un escenario multicontenedor lo tenemos en [/usr/local/etc/php/php.ini](files/php.ini).
 
-En el [último punto de esta sección](# Importante-solucion-de-problemas-que-puedan-surgir), puedes encontrar la solución a problemas que te pueden surgir durante la realización del ejercicio, relacionado con los cambios en las configuraciones, por lo que puedes echarle un ojo antes de empezar.
+En el [último punto de esta sección](Importante-solucion-de-problemas-que-puedan-surgir) , puedes encontrar la solución a problemas que te pueden surgir durante la realización del ejercicio, relacionado con los cambios en las configuraciones, por lo que puedes echarle un ojo antes de empezar.
 ---
 ## 1. Instalación de Apache
 ---
