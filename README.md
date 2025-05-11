@@ -44,11 +44,13 @@ Para asegurarnos que no tenemos ninguna seguridad implementada descarga tus arch
 
 - Archivo de configuración de `PHP`. Nosotros al estar utilizando un escenario multicontenedor lo tenemos en [/usr/local/etc/php/php.ini](files/php.ini).
 
+- Archivo de configuración del sitio virtual `Apache`. [/etc/apache2/sites-available/000-default.conf.](files/000-default.conf)
+
+
 En el [último punto de esta sección](#IMPORTANTE-Solucion-problemas-que-puedan-surgir.) , puedes encontrar la solución a problemas que te pueden surgir durante la realización del ejercicio, relacionado con los cambios en las configuraciones, por lo que puedes echarle un ojo antes de empezar.
 
 ---
 ## 1. Instalación de Apache
----
 
 Cómo estamos utilizando un escenario docker-compose, para acceder a nuestra máquina tendremos que ejecutar:
 
@@ -67,6 +69,7 @@ apt install apache2
 
 Si no estás utilizando el entorno de pruebas sino otra máquina no estás con usuario `root`es posible que tengas que poner delante de los comandos `sudo`.
 
+---
  
 ## 2. Estructura de directorios de configuración Apache
 
@@ -114,6 +117,7 @@ Cuando habilitamos un directorio con `a2ensite`(Apache2 enable site), se crea un
 
 ![](images/hard2.png)
 
+---
 
 ## 3. Sitios Virtuales
 
@@ -164,6 +168,7 @@ chown -R www-data:www-data /var/www/html/*
 chmod -R 755 /var/www/html/*
 ~~~
 
+---
 
 ## 4. Resolución local de nombres: dns o fichero **/etc/hosts**
 
@@ -209,6 +214,7 @@ http://www.pps.edu/
 
 ![](images/hard5.png)
 
+---
 
 ## 5. Creación de un servidor virtual **Hackker**
 
@@ -249,8 +255,9 @@ Accedemos desde `http://www.hacker.edu`
 ![](images/hard6.png)
 
 
-## 6. Cómo habilitar HTTPS con SSL/TLS en Servidor Apache
 ---
+
+## 6. Cómo habilitar HTTPS con SSL/TLS en Servidor Apache
 
 Para proteger nuestro servidor es crucial habilitar HTTPS en el servidor local. Veamos cómo podemos habilitarlo en Apache con dos métodos diferentes.
 
@@ -368,7 +375,6 @@ Ahora el servidor soportaría **HTTPS**. Accedemos al servidor en la siguiente d
 
 
 ### Método 2: Obtener Certificado en un servidor Linux usando Let's Encrypt y Certbot**
----
 
 El objetivo de [Let’s Encrypt[(https://letsencrypt.org/es/how-it-works/) y el protocolo ACME es hacer posible configurar un servidor HTTPS y permitir que este genere automáticamente un certificado válido para navegadores, sin ninguna intervención humana. Esto se logra ejecutando un agente de administración de certificados en el servidor web.
 
@@ -476,6 +482,9 @@ SSLCertificateFile /etc/letsencrypt/live/tu-dominio/fullchain.pem
 SSLCertificateKeyFile /etc/letsencrypt/live/tu-dominio/privkey.pem
 ~~~
 
+
+---
+
 ## 7. 🔒  Forzar HTTPS en Apache2 (default.conf y .htaccess)
 
 ### 1. Configuración en `default.conf` (archivo de configuración de Apache)
@@ -522,7 +531,6 @@ Tienes dos opciones:
 </VirtualHost>
 ```
 
----
 
 ### 2. Configuración en `.htaccess`
 
@@ -547,8 +555,8 @@ RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 También asegúrate que el módulo `mod_rewrite` esté habilitado:
 
 ```bash
-sudo a2enmod rewrite
-sudo systemctl reload apache2
+a2enmod rewrite
+service apache2 reload
 ```
 
 ---
@@ -570,6 +578,8 @@ una aplicación web para evitar ataques como XSS.
 Por ejemplo, de esta forma solo permitimos la carga de contenidos de nuestro sitio, ningúno de servidores externos.
 
 
+---
+
 ## 9. 🛡️  Nota de seguridad extra: HSTS (opcional pero recomendado)
 
 Puedes ver este contenido con más profundidad en el siguiente repositorio: <https://github.com/jmmedinac03vjp/PPS-Unidad3Actividad21-HSTS>
@@ -583,6 +593,8 @@ Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains
 > Esto obliga a los navegadores a recordar usar siempre HTTPS, protegiendo de ataques de tipo *downgrade*.
 
 **Importante**: Asegúrate de que todo tu sitio funcione bien en HTTPS antes de aplicar HSTS.
+
+
 ---
 
 ## 10. Identificación y Corrección de Security Misconfiguration
@@ -697,7 +709,7 @@ service php8.2-fpm restart
 > Con estas modificaciones, la respuesta del servidor a `curl -I http://pps.edu` ya no debería mostrar la versión de Apache ni de PHP.
 
 
-### Otras mitigaciones y Mejores Prácticas
+### Otras mitigaciones para Configuración Insegura y Mejores Prácticas
 
 **Deshabilitar listados de directorios**
 
@@ -842,7 +854,7 @@ Las inclusión de las diferentes cabeceras tienen las siguientes consecuencias:
 - `Header always set X-Content-Type-Options "nosniff"` → Evita ataques MIME Sniffing.
 
 
-### Configuración FINAL del archivo 000-default.conf
+### Configuración final de archivo `default-ssl.conf` 
 
 Aqui puedes encontrar la configuración segura:
 
@@ -921,7 +933,44 @@ A diferencia de un firewall tradicional (que bloquea tráfico a nivel de red o s
 - Ataques de fuerza bruta, entre otros.
 
 
-🛡 ¿Cómo funciona?
+A continuación puedes probar alguno de los ataques. Los tienes enlazados al repositorio donde puedes encontrar información sobre explotación y mitigación y la forma de probarlos. Si has realizado las actividades correspondientes, deberías de tener los diferentes archivos.
+
+- [Inyección SQL](https://github.com/jmmedinac03vjp/PPS-Unidad3Actividad4-InyeccionSQL). 
+
+Accede a la página: <http://localhost/SQLi/login1.php> 
+
+Introduce  en el campo de usuario o contraseña el siguiente código:
+
+```
+' OR '1'='1' -- -
+```
+
+![](images/hard30.png)
+
+
+Aparecerán los usuarios y contraseñas almacenados en el sistema.
+- [Cross-Site Scripting (XSS)]
+
+Accede a la página: <http://localhost/SQLi/login1.php> 
+
+Introduce  en el campo de usuario o contraseña el siguiente código:
+
+```
+<script>alert('XSS ejecutado!')</script>
+```
+
+![](images/hard29.png)
+
+
+- [Path Traversal](https://github.com/jmmedinac03vjp/PPS-Unidad3Actividad8-LFI)
+
+Accede a la página <http://localhost/LFI/lfi.php?file=../../../../etc/passwd>
+
+![](images/hard28.png)
+
+
+
+🛡 **¿Cómo funciona?**
 
 El WAF inspecciona cada solicitud y respuesta HTTP:
 
@@ -934,34 +983,46 @@ Puede trabajar en distintos modos:
 - Prevención (activo): bloquea el tráfico sospechoso.
 
 
-✅ Ventajas
+✅ **Ventajas**
 
-Protege sin modificar el código de la aplicación.
+- Protege sin modificar el código de la aplicación.
 
-Ayuda a cumplir normativas como PCI-DSS.
+- Ayuda a cumplir normativas como PCI-DSS.
 
-Se actualiza fácilmente con nuevas reglas contra amenazas recientes.
+- Se actualiza fácilmente con nuevas reglas contra amenazas recientes.
+
+
+### Eliminar configuraciones aplicadas anterioremente.
+
+Para asegurarnos que no tenemos ninguna seguridad implementada de las realizadas anterioremente, descarga tus archivos de configuración:
+
+- Archivo de configuración de `Apache`[/etc/apache2/apache2.conf](files/apache2.conf.minimo)
+
+- Archivo de configuración de `PHP`. Nosotros al estar utilizando un escenario multicontenedor lo tenemos en [/usr/local/etc/php/php.ini](files/php.ini).
+
+- Archivo de configuración del sitio virtual `Apache`. [/etc/apache2/sites-available/000-default.conf.](files/000-default.conf)
+
 
 
 ### ✅ 2. Instalar `mod_security`
 
+Para instalar la libreria de Apache `ModSecurity` ejecuta en línea de comandos:
 
 ```bash
-sudo apt update
-sudo apt install libapache2-mod-security2
+apt update
+apt install libapache2-mod-security2
 ```
-
 
 Esto instala `mod_security` y lo habilita como módulo de Apache.
 
----
 
 ### ✅ 3. Activar y verificar `mod_security`
 
-Edita el archivo de configuración:
+Copiamos el archivo de configuración recomendado
 
 ```bash
-sudo nano /etc/modsecurity/modsecurity.conf
+cp /etc/modsecurity/modsecurity.conf-recommended /etc/modsecurity/modsecurity.conf 
+nano /etc/modsecurity/modsecurity.conf
 ```
 
 Asegúrate de que esté en modo "detección" primero (fase de pruebas):
@@ -970,12 +1031,15 @@ Asegúrate de que esté en modo "detección" primero (fase de pruebas):
 SecRuleEngine DetectionOnly
 ```
 
+![](images/hard31.png)
+
+
 > 🔁 Más adelante puedes cambiar a `On` para bloquear tráfico malicioso real.
 
-Guarda y reinicia Apache:
+Guarda y recarga el servicio  Apache:
 
 ```bash
-sudo systemctl restart apache2
+service apache2 reload
 ```
 
 Verifica que `mod_security` esté cargado:
@@ -983,26 +1047,46 @@ Verifica que `mod_security` esté cargado:
 ```bash
 apachectl -M | grep security
 ```
+Nos debe de dar como resultado: ` security2_module (shared)`
+
+![](images/hard32.png)
 
 ---
 
 ### ✅ 4. Descargar OWASP ModSecurity Core Rule Set (CRS)
 
+Para incorporar las reglas CRS de OWASP a `mod_security` clonamos el repositorio y copiamos el archivo de configuración.
 ```bash
 cd /etc/modsecurity
-sudo git clone https://github.com/coreruleset/coreruleset.git
+apt install git
+git clone https://github.com/coreruleset/coreruleset.git
 cd coreruleset
-sudo cp crs-setup.conf.example crs-setup.conf
+cp crs-setup.conf.example crs-setup.conf
 ```
 
 ---
 
 ### ✅ 5. Incluir las reglas OWASP en la configuración
 
-Edita el archivo de configuración de Apache para que cargue las reglas. Puedes hacer esto en un archivo `.conf` dentro de `/etc/apache2/conf-available/`:
+Al instalar modsecurity-crs, Apache puede autoincluir CRS desde:
+
+archivo ` /etc/apache2/mods-available/security2.conf`
+```apache
+IncludeOptional /usr/share/modsecurity-crs/*.load
+```
+Para comprobar si están añadidas las reglas de modsecurity-crs, puedes hacer:
 
 ```bash
-sudo nano /etc/apache2/conf-available/security-crs.conf
+apache2ctl -t -D DUMP_INCLUDES|grep modsecurity
+```
+Si nos muestran diferentes módulos de reglas, están habilitados y no es necesario crear un archivo como security-crs.conf a menos que quieras una configuración personalizada o usas otra ubicación.
+
+![](images/hard33.png)
+
+En el caso de que no te aparezcan cargados los módulos, edita el archivo de configuración de Apache para que cargue las reglas. Puedes hacer esto en un archivo `.conf` dentro de `/etc/apache2/conf-available/`:
+
+```bash
+nano /etc/apache2/conf-available/security-crs.conf
 ```
 
 Y añade lo siguiente:
@@ -1013,12 +1097,20 @@ IncludeOptional /etc/modsecurity/coreruleset/crs-setup.conf
 IncludeOptional /etc/modsecurity/coreruleset/rules/*.conf
 ```
 
-Luego, habilita el archivo:
+Para probar, es conveniente que el resto de los sitios virtuales estén deshabilitados. Si has estado haciendo pruebas con el sitio `pps.edu` u otro, es conveniente que lo revises y deshabilites y habilita `000-default`.
 
 ```bash
-sudo a2enconf security-crs
-sudo systemctl reload apache2
+a2dissite default-ssl
+a2ensite 000-default
 ```
+
+Luego, habilita el archivo de configuración y reinicia el servicio:
+
+```bash
+a2enconf security-crs
+service apache2 reload
+```
+Si te da error de duplicación de reglas, puedes comentar los `includeOptional` del archivo de configuración.
 
 ---
 
@@ -1027,7 +1119,7 @@ sudo systemctl reload apache2
 Una vez que hayas probado que no rompe funcionalidades legítimas de tu sitio:
 
 ```bash
-sudo nano /etc/modsecurity/modsecurity.conf
+nano /etc/modsecurity/modsecurity.conf
 ```
 
 Cambia:
@@ -1038,32 +1130,39 @@ SecRuleEngine On
 
 Esto hará que el WAF **bloquee solicitudes peligrosas automáticamente**.
 
+### ✅ 7. Probar el WAF
+
+Prueba reglas usando cadenas típicas de ataques en la URL:
+
+```
+http://localhost/LFI/lfi.php?file=../../../../etc/passwd
+```
+
+El acceso debería ser bloqueado con un **Forbidden** (si está en modo "On") o logueado (si está en "DetectionOnly").
+
 ---
 
-### ✅ 7. Ver logs de ModSecurity
 
-ModSecurity escribe sus logs en:
+![](images/hard34.png)
+
+---
+
+### ✅ 8. Ver logs de ModSecurity
+
+ModSecurity escribe sus logs `/var/log/apache2/modsec_autdit.log`.
+
+Así si hemos intentado hacer el ataque XSS anteriormente, podremos encontrar información de él:
 
 ```bash
-/var/log/apache2/modsec_audit.log
+cat /var/log/apache2/modsec_audit.log
 ```
+
+![](images/hard35.png)
 
 También puede usar el `error.log` de Apache para errores graves.
 
 ---
 
-### ✅ 8. Probar el WAF
-
-Prueba reglas usando cadenas típicas de ataques en la URL:
-
-```
-https://tusitio.com/?param=<script>alert(1)</script>
-https://tusitio.com/?param=../../etc/passwd
-```
-
-El acceso debería ser bloqueado con un **403 Forbidden** (si está en modo "On") o logueado (si está en "DetectionOnly").
-
----
 
 ### 🛠️ Consejo: desactivar reglas específicas
 
