@@ -899,6 +899,184 @@ archivo `/etc/apache2/etc/sites-available/default-ssl.conf`
 
 ---
 
+## 🔐 Configuración de `mod_security` con reglas OWASP CRS en Apache
+
+Par finalizar vamos a crear un WAF en nuestro servidor Apache.
+
+
+### 🔐 1. ¿Qué es un WAF?
+
+Un WAF (Web Application Firewall) es un firewall especializado que protege aplicaciones web filtrando, monitoreando y bloqueando tráfico HTTP/S malicioso. Actúa como una barrera entre el cliente (usuario) y el servidor web.
+
+A diferencia de un firewall tradicional (que bloquea tráfico a nivel de red o sistema), un WAF entiende cómo funcionan las aplicaciones web y puede detectar ataques como:
+
+- Inyección SQL
+
+- Cross-Site Scripting (XSS)
+
+- Falsificación de petición en sitios cruzados (CSRF)
+
+- Path Traversal
+
+- Ataques de fuerza bruta, entre otros.
+
+
+🛡 ¿Cómo funciona?
+
+El WAF inspecciona cada solicitud y respuesta HTTP:
+
+Si detecta patrones que coinciden con reglas predefinidas (por ejemplo, las de OWASP CRS), puede bloquear, registrar o permitir la solicitud.
+
+Puede trabajar en distintos modos:
+
+- Detección (pasivo): solo registra alertas.
+
+- Prevención (activo): bloquea el tráfico sospechoso.
+
+
+✅ Ventajas
+
+Protege sin modificar el código de la aplicación.
+
+Ayuda a cumplir normativas como PCI-DSS.
+
+Se actualiza fácilmente con nuevas reglas contra amenazas recientes.
+
+
+### ✅ 2. Instalar `mod_security`
+
+
+```bash
+sudo apt update
+sudo apt install libapache2-mod-security2
+```
+
+
+Esto instala `mod_security` y lo habilita como módulo de Apache.
+
+---
+
+### ✅ 3. Activar y verificar `mod_security`
+
+Edita el archivo de configuración:
+
+```bash
+sudo nano /etc/modsecurity/modsecurity.conf
+```
+
+Asegúrate de que esté en modo "detección" primero (fase de pruebas):
+
+```apache
+SecRuleEngine DetectionOnly
+```
+
+> 🔁 Más adelante puedes cambiar a `On` para bloquear tráfico malicioso real.
+
+Guarda y reinicia Apache:
+
+```bash
+sudo systemctl restart apache2
+```
+
+Verifica que `mod_security` esté cargado:
+
+```bash
+apachectl -M | grep security
+```
+
+---
+
+### ✅ 4. Descargar OWASP ModSecurity Core Rule Set (CRS)
+
+```bash
+cd /etc/modsecurity
+sudo git clone https://github.com/coreruleset/coreruleset.git
+cd coreruleset
+sudo cp crs-setup.conf.example crs-setup.conf
+```
+
+---
+
+### ✅ 5. Incluir las reglas OWASP en la configuración
+
+Edita el archivo de configuración de Apache para que cargue las reglas. Puedes hacer esto en un archivo `.conf` dentro de `/etc/apache2/conf-available/`:
+
+```bash
+sudo nano /etc/apache2/conf-available/security-crs.conf
+```
+
+Y añade lo siguiente:
+
+```apache
+# Activar CRS
+IncludeOptional /etc/modsecurity/coreruleset/crs-setup.conf
+IncludeOptional /etc/modsecurity/coreruleset/rules/*.conf
+```
+
+Luego, habilita el archivo:
+
+```bash
+sudo a2enconf security-crs
+sudo systemctl reload apache2
+```
+
+---
+
+### ✅ 6. Activar bloqueo real (opcional, tras pruebas)
+
+Una vez que hayas probado que no rompe funcionalidades legítimas de tu sitio:
+
+```bash
+sudo nano /etc/modsecurity/modsecurity.conf
+```
+
+Cambia:
+
+```apache
+SecRuleEngine On
+```
+
+Esto hará que el WAF **bloquee solicitudes peligrosas automáticamente**.
+
+---
+
+### ✅ 7. Ver logs de ModSecurity
+
+ModSecurity escribe sus logs en:
+
+```bash
+/var/log/apache2/modsec_audit.log
+```
+
+También puede usar el `error.log` de Apache para errores graves.
+
+---
+
+### ✅ 8. Probar el WAF
+
+Prueba reglas usando cadenas típicas de ataques en la URL:
+
+```
+https://tusitio.com/?param=<script>alert(1)</script>
+https://tusitio.com/?param=../../etc/passwd
+```
+
+El acceso debería ser bloqueado con un **403 Forbidden** (si está en modo "On") o logueado (si está en "DetectionOnly").
+
+---
+
+### 🛠️ Consejo: desactivar reglas específicas
+
+Si alguna regla legítimamente interfiere con tu aplicación, puedes desactivarla selectivamente:
+
+```apache
+SecRuleRemoveById 942100
+```
+
+Coloca esto en tu configuración personalizada, después de cargar el CRS.
+
+---
+
 ## ⚠️  
 ##IMPORTANTE SOLUCION  de problemas que puedan surgir.
 
