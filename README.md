@@ -688,18 +688,20 @@ service php8.2-fpm restart
 
 ** Deshabilitar listados de directorios**
 
-Nos encontramos ante un fallo de seguridad cuando al introducir la ruta a una carpeta del servidor web que no contiene un archivo `index.html`, se nos muestran los archivos presentes en ella. Por ejemplo, crea una carpeta de ejemplo e introduce en ella dos archivos vacíos:
+Nos encontramos ante un fallo de seguridad cuando al introducir la ruta a una carpeta del servidor web que no contiene un archivo `index.html`, se nos muestran los archivos presentes en ella. 
+
+![](images/hard24.png)
+
+Para la prueba, crea una carpeta de ejemplo e introduce en ella dos archivos vacíos:
 
 ``` bash
 mkdir /var/www/html/ejemplo
-touch /var/www/html/ejemlo/ejemplo1.txt
-touch /var/www/html/ejemlo/ejemplo2.txt
+touch /var/www/html/ejemplo/ejemplo1.txt
+touch /var/www/html/ejemplo/ejemplo2.txt
 ```
-Comprueba que en la configuración de tu sitio no esté deshabilitados el `Options -Indexes`:
  
-![](images/hard22.png)
 
-Si 
+
 
 Para deshabilitar que se puedan listar los directorios si no hay un index utilizamos en los directorios deseados `Options Indexes`:
 
@@ -739,13 +741,50 @@ Dependiendo de donde nos interese podemos aplicar esta configuración en:
 > Podemos activar o desactivar una opción en referencia con la configuración de un directorio padre mediante el signo `+` o `-`.
 >
 
+Después de aplicar esa `Options` si queremos acceder a una carpeta que no contiene ningún `index.html` nos dará un aviso de permisos y no se muestra el contenido:
+
+![](images/hard25.png)
+
+
+
 **Revisar permisos en archivos sensibles**
 
-Los permisos del archivo de configuración de Apache deben de ser los siguientes:
+Por defecto, en el archivo de configuración de `Apache`  tienen permiso de lectura todos los usuarios:
+
+![](images/hard26.png)
+ 
+Cambiamos los permisos por quitando los permisos de lectura del grupo `Otros`:
 
 ```bash
 chmod 640 /etc/apache2/apache2.conf
 ```
+
+**Políticas de Control de Acceso: Autorización:**
+
+El **control de acceso**, hace referencia a todos los medios que proporcionan una forma de controlar el acceso a cualquier recurso. La directiva `Require` proporciona una variedad de diferentes maneras de permitir o denegar el acceso a los recursos. Además puede ser usada junto con las directivas: `RequireAll`, `RequireAny`, y `RequireNone`, estos requerimientos pueden ser combinados de forma compleja y arbitraria, para cumplir cualquiera que sean tus políticas de acceso.
+
+Podemos controlar el acceso a cualquier recurso o conjunto de recurso, por ejemplo usando una directiva `Directory`, con `Requiere` usando algunas de estas opciones:
+
+`Require all granted`: El acceso es permitido incondicionalmente.
+
+`Require all denied`: El acceso es denegado incondicionalmente.
+
+`Require user userid [userid] ...`: El acceso es permitido sólo si los usuarios indicados se han autentificado.
+
+`Require group group-name [group-name] ...`: El acceso es permitido sólo a los grupos de usuarios especificados.
+
+`Require valid-user`: El acceso es permitido a los usuarios válidos.
+
+`Require ip 10 172.20 192.168.2`: El acceso es permitido si se hace desde el conjunto de direcciones especificadas.
+
+`Require host dominio`: El acceso es permitido si se hace desde el dominio especificado.
+
+`Require local`: El acceso es permitido desde localhost.
+
+Se puede usar el operador not para indicar la denegación, por ejemplo: `Require not ip 10.0`
+
+Por lo tanto podemos usar esta directiva para restringir el acceso a nuestras páginas.
+
 
 **Desactivar métodos HTTP inseguros**
 
@@ -761,16 +800,32 @@ Para Desactivar métodos HTTP inseguros como `PUT`, `DELETE`, `TRACE`u `OPTIONS`
 
 **Configurar cabeceras de seguridad en Apache**
 
+Aplicamos diferentes mejoras que nos proporciona el módulo `headers`.
+
+Para habilitar el módulo:
+```bash
+a2enmod headers
+```
+
+Incluimos en `/etc/apache2/defaul.conf`o en nuestro archivo de sitio virtual `/etc/apache2/sites-available/XXXXX.conf`:
+
 ```apache
 Header always unset X-Powered-By
 Header always set X-Frame-Options "DENY"
 Header always set X-XSS-Protection "1; mode=block"
 Header always set X-Content-Type-Options "nosniff"
 ```
+
+![](images/hard27.png)
+
 Las inclusión de las diferentes cabeceras tienen las siguientes consecuencias: 
+
 - `Header always unset X-Powered-By` → Oculta información sobre PHP.
+
 - `Header always set X-Frame-Options "DENY"` → Previene ataques de Clickjacking.
+
 - `Header always set X-XSS-Protection "1; mode=block"` → Protege contra ataques XSS.
+
 - `Header always set X-Content-Type-Options "nosniff"` → Evita ataques MIME Sniffing.
 
 
@@ -781,28 +836,51 @@ Aqui puedes encontrar la configuración segura:
 archivo `/etc/apache2/etc/sites-available/default-ssl.conf`
 ```apache
 <VirtualHost *:80>
-ServerAdmin webmaster@localhost
-DocumentRoot /var/www/html
-# Deshabilitar listado de directorios
-<Directory /var/www/html>
-Options -Indexes
-</Directory>
-# Desactivar métodos HTTP inseguros (Solo permite GET y POST)
-<Directory />
-<LimitExcept GET POST>
-Deny from all
-</LimitExcept>
-</Directory>
-# Configurar cabeceras de seguridad
-<IfModule mod_headers.c>
-Header always unset X-Powered-By
-Header always set X-Frame-Options "DENY"
-Header always set X-XSS-Protection "1; mode=block"
-Header always set X-Content-Type-Options "nosniff"
-</IfModule>
-# Otras configuraciones de logs y errores
-ErrorLog ${APACHE_LOG_DIR}/error.log
-CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+    ServerName www.pps.edu
+
+    ServerAdmin webmaster@localhost
+    DocumentRoot /var/www/html
+
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName www.pps.edu
+
+    DocumentRoot /var/www/html
+
+    #activar uso del motor de protocolo SSL
+    SSLEngine on
+    SSLCertificateFile /etc/apache2/ssl/server.crt
+    SSLCertificateKeyFile /etc/apache2/ssl/server.key
+
+    # Desactivar m  todos HTTP inseguros (Solo permite GET y POST)
+    <Directory />
+        <LimitExcept GET POST>
+                Deny from all
+        </LimitExcept>
+    </Directory>
+
+    <Directory /var/www/html>
+        # Deshabilitar mostrar contenido indexado 
+        Options -Indexes
+        # habilitar seguir los enlaces simbolicos
+        Options FollowSymLinks
+        #Permitir todas directivas en el uso de los ficheros .htaccess
+        AllowOverride All
+        # Permitir acceso incondicional de cualquier usuario
+        Require all granted
+    </Directory>
+    # Configurar cabeceras de seguridad
+    <IfModule mod_headers.c>
+        Header always unset X-Powered-By
+        Header always set X-Frame-Options "DENY"
+        Header always set X-XSS-Protection "1; mode=block"
+        Header always set X-Content-Type-Options "nosniff"
+    </IfModule>
 </VirtualHost>
 ```
 
