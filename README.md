@@ -11,7 +11,7 @@ Tenemos como objetivo:
 >
 > - Saber configurar nuestro servidor para utilizar HTTPS.
 >
-> - Conocer HTST
+> - Conocer HTST.
 >
 > - Utilizar configuracion segura en servidores y aplicaciones web.
 >
@@ -44,6 +44,7 @@ Para asegurarnos que no tenemos ninguna seguridad implementada descarga tus arch
 
 - Archivo de configuración de `PHP`. Nosotros al estar utilizando un escenario multicontenedor lo tenemos en [/usr/local/etc/php/php.ini](files/php.ini).
 
+En el [último punto de esta sección](#Importante-solucion-de-problemas-que-puedan-surgir), puedes encontrar la solución a problemas que te pueden surgir durante la realización del ejercicio, relacionado con los cambios en las configuraciones, por lo que puedes echarle un ojo antes de empezar.
 ---
 ## 1. Instalación de Apache
 ---
@@ -697,7 +698,7 @@ service php8.2-fpm restart
 
 ### Otras mitigaciones y Mejores Prácticas
 
-** Deshabilitar listados de directorios**
+**Deshabilitar listados de directorios**
 
 Nos encontramos ante un fallo de seguridad cuando al introducir la ruta a una carpeta del servidor web que no contiene un archivo `index.html`, se nos muestran los archivos presentes en ella. 
 
@@ -896,7 +897,8 @@ archivo `/etc/apache2/etc/sites-available/default-ssl.conf`
 ```
 
 ---
-## ⚠️  IMPORTANTE: SOLUCIÓN  de problemas que puedan surgir.
+
+## ⚠️  IMPORTANTE SOLUCION  de problemas que puedan surgir.
 
 Como estamos utilizando un servidor con docker-compose es importante:
 
