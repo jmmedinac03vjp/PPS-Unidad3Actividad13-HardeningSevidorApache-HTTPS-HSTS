@@ -40,8 +40,11 @@ docker-compose up -d
 
 Para asegurarnos que no tenemos ninguna seguridad implementada descarga tus archivos de configuración:
 
-- [/etc/apache2/apache2.conf](files/apache2.conf.minimo)
+- Archivo de configuración de `Apache`[/etc/apache2/apache2.conf](files/apache2.conf.minimo)
 
+- Archivo de configuración de `PHP`. Nosotros al estar utilizando un escenario multicontenedor lo tenemos en [/usr/local/etc/php/php.ini](files/php.ini).
+
+---
 ## 1. Instalación de Apache
 ---
 
@@ -666,7 +669,7 @@ archivo `/usr/local/etc/php/php.ini`
 ```bash
 nano /usr/local/etc/php/php.ini
 ```
-[Aquí tienes el archivo de configuración de php](files/php.ini). Recuerda hacer una copia del anterior
+[Aquí tienes el archivo de configuración de php](files/php.ini.seguro). Recuerda hacer una copia del anterior
 
 - Hemos cambiado `expose_php = On` a `expose_php = Off` y reiniciado los servicios:
 
