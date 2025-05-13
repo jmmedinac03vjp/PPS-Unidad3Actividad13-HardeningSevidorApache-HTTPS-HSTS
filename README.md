@@ -352,7 +352,7 @@ Lo modificamos y dejamos así:
 <VirtualHost *:443>
     ServerName www.pps.edu
 
-   //activar uso del motor de protocolo SSL 
+   #activar uso del motor de protocolo SSL 
     SSLEngine on
     SSLCertificateFile /etc/apache2/ssl/localhost.crt
     SSLCertificateKeyFile /etc/apache2/ssl/localhost.key
@@ -487,8 +487,8 @@ Fragmento típico de configuración SSL:
 
 ~~~
 SSLEngine on
-SSLCertificateFile /etc/letsencrypt/live/tu-dominio/fullchain.pem
-SSLCertificateKeyFile /etc/letsencrypt/live/tu-dominio/privkey.pem
+SSLCertificateFile /etc/letsencrypt/live/tu-dominio/localhost.pem
+SSLCertificateKeyFile /etc/letsencrypt/live/tu-dominio/localhost.pem
 ~~~
 
 
@@ -607,7 +607,7 @@ Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains
 
 ## 10. Identificación y Corrección de Security Misconfiguration
 
-En este apartado vermeos la configuración segura en servidores y aplicaciones web
+En este apartado veremos la configuración segura en servidores y aplicaciones web
 
 **Objetivo**: Detectar configuraciones inseguras en un servidor web y corregirlas
 
@@ -918,7 +918,7 @@ archivo `/etc/apache2/etc/sites-available/default-ssl.conf`
 ```
 
 
-### 🔐 10. Configuración de `mod_security` con reglas OWASP CRS en Apache
+## 🔐 10. Configuración de `mod_security` con reglas OWASP CRS en Apache
 
 Par finalizar vamos a crear un WAF en nuestro servidor Apache.
 
@@ -1090,7 +1090,7 @@ Si nos muestran diferentes módulos de reglas, están habilitados y no es necesa
 
 ![](images/hard33.png)
 
-En el caso de que no te aparezcan cargados los módulos, edita el archivo de configuración de Apache para que cargue las reglas. Puedes hacer esto en un archivo `.conf` dentro de `/etc/apache2/conf-available/`:
+**IMPORTANTE¡¡ Solo en el caso de que no te aparezcan cargados los módulos**, edita el archivo de configuración de Apache para que cargue las reglas. Puedes hacer esto en un archivo `.conf` dentro de `/etc/apache2/conf-available/`:
 
 ```bash
 nano /etc/apache2/conf-available/security-crs.conf
@@ -1104,12 +1104,6 @@ IncludeOptional /etc/modsecurity/coreruleset/crs-setup.conf
 IncludeOptional /etc/modsecurity/coreruleset/rules/*.conf
 ```
 
-Para probar, es conveniente que el resto de los sitios virtuales estén deshabilitados. Si has estado haciendo pruebas con el sitio `pps.edu` u otro, es conveniente que lo revises y deshabilites y habilita `000-default`.
-
-```bash
-a2dissite default-ssl
-a2ensite 000-default
-```
 
 Luego, habilita el archivo de configuración y reinicia el servicio:
 
@@ -1119,6 +1113,12 @@ service apache2 reload
 ```
 Si te da error de duplicación de reglas, puedes comentar los `includeOptional` del archivo de configuración.
 
+Para probar, es conveniente que el resto de los sitios virtuales estén deshabilitados. Si has estado haciendo pruebas con el sitio `pps.edu` u otro, es conveniente que lo revises y deshabilites y habilita `000-default`.
+
+```bash
+a2dissite default-ssl
+a2ensite 000-default
+```
 ---
 
 ### ✅  Activar bloqueo real (opcional, tras pruebas)
@@ -1146,9 +1146,6 @@ http://localhost/LFI/lfi.php?file=../../../../etc/passwd
 ```
 
 El acceso debería ser bloqueado con un **Forbidden** (si está en modo "On") o logueado (si está en "DetectionOnly").
-
----
-
 
 ![](images/hard34.png)
 
@@ -1183,8 +1180,55 @@ Coloca esto en tu configuración personalizada, después de cargar el CRS.
 
 ---
 
-## ⚠️  
-## 11.IMPORTANTE SOLUCION  de problemas que puedan surgir.
+
+
+## ⚠️   Volver a dejar todo "niquelao"
+
+Para eliminar los cambios que hemos realizado en esta actividad y volver a dejar todo en su sitio de cara a hacer otras actividades vamos a realizar algunas acciones
+
+Deshabilitamos el sitio `default-ssl` y volvemos a habilitar `000-default`:
+
+```bash
+a2dissite default-ssl
+a2ensite 000-default
+```
+
+Deshabilitamos los módulos `ssl`, `headers` y `security2` y recargamos Apache:
+
+```bash
+a2dismod ssl
+a2dismod headers
+a2dismod security2
+service apache2 reload
+```
+
+
+Volvemos a colocar los archivos por defecto
+
+- Archivo de configuración de `Apache`[/etc/apache2/apache2.conf](files/apache2.conf.minimo)
+
+- Archivo de configuración de `PHP`. Nosotros al estar utilizando un escenario multicontenedor lo tenemos en [/usr/local/etc/php/php.ini](files/php.ini).
+
+- Archivo de configuración del sitio virtual `Apache`. [/etc/apache2/sites-available/000-default.conf.](files/000-default.conf)
+
+
+Si queremos volver a habilitar que se muestre la visibilidad de `Apache`, modificamos el archivo  `/etc/apache2/conf-available/security.conf` y ponemos  `ServerSignature`  a  `On`.
+
+Para deshabilitar el **WAF** de `ModSecurity`, ya hemos deshabilitado el módulo `security2` pero podemos editar el archivo `/etc/modsecurity/modsecurity.conf` y ponemos la directiva `SecRuleEngine` a ` Off`.
+
+Podemos comprobar si se han deshabilitado las reglas y el módulo con:
+
+```bash
+apache2ctl -t -D DUMP_INCLUDES|grep modsecurity
+```
+
+No debe de darnos ningún resultado.
+![](images/hard36.png)
+
+ 
+
+
+## 12.IMPORTANTE SOLUCION  de problemas que puedan surgir.
 
 Como estamos utilizando un servidor con docker-compose es importante:
 
