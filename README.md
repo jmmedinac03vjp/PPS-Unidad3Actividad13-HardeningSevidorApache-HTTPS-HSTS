@@ -231,18 +231,16 @@ Vamos a crear un servidor virtual nuevo para alojar los archivos maliciosos. El 
 
 Dentro de este directorio crear una página básica index.html. Puedes descargarte [éste.](./files/index.html)
 
-Creamos directorio, copiamos el archivo y establecemos permisos y propietarios. Finalmente habilitamos sitio y recargamos servicio:
+Creamos directorio, copiamos el archivo y establecemos permisos y propietarios. 
 
 ~~~
 mkdir /var/www/hacker 
 cp /var/www/html/index.html /var/www/hacker/index.html
 chown -R www-data:www-data /var/www/hacker
 chmod -R 755 /var/www/hacker
-a2ensite /etc/apache2/sites-available/hacker.conf
-service apache2 reload
 ~~~
 
-Finalmente creamos el archivo de configuración del sitio:
+Creamos el archivo de configuración del sitio:
 
 ~~~
 <VirtualHost *:80>
@@ -259,6 +257,12 @@ Finalmente creamos el archivo de configuración del sitio:
 
 ~~~
 
+Finalmente habilitamos el sitio y recargamos el servicio
+
+```bash
+a2ensite /etc/apache2/sites-available/hacker.conf
+service apache2 reload
+```
 Accedemos desde `http://www.hacker.edu`
 
 ![](images/hard6.png)
